@@ -31,6 +31,23 @@ namespace miniTankLofi {
         Rueckwaerts = 1
     }
 
+    export enum LofiTaste {
+        //% block="↑"
+        Hoch = 0,
+        //% block="↓"
+        Runter = 1,
+        //% block="←"
+        Links = 2,
+        //% block="→"
+        Rechts = 3
+    }
+
+    let lofiGestartet = false
+    let letzteNachricht = 0
+    let motorenAktiv = false
+    let ereignisse: number[] = []
+    let funktionen: (() => void)[] = []
+
     /**
      * Einen oder beide Motoren steuern.
      * Tempo 0 bedeutet Motor aus.
@@ -56,28 +73,115 @@ namespace miniTankLofi {
 
         let signal = richtung == Richtung.Vorwaerts ? 1 : 0
 
-        // Motor links
         if (motor == Motor.Links || motor == Motor.Beide) {
             pins.analogWritePin(AnalogPin.P1, 0)
             pins.digitalWritePin(DigitalPin.P0, signal)
             pins.analogWritePin(AnalogPin.P1, tempo)
         }
 
-        // Motor rechts
         if (motor == Motor.Rechts || motor == Motor.Beide) {
             pins.analogWritePin(AnalogPin.P3, 0)
             pins.digitalWritePin(DigitalPin.P2, signal)
             pins.analogWritePin(AnalogPin.P3, tempo)
         }
+
+        if (tempo > 0) {
+            motorenAktiv = true
+            letzteNachricht = input.runningTime()
+        } else if (motor == Motor.Beide) {
+            motorenAktiv = false
+        }
     }
 
     /**
-     * Bluetooth-UART für LOFI Control starten.
+     * Beide Motoren ausschalten.
+     */
+    //% blockId=mini_tank_lofi_stopp
+    //% block="Motoren stoppen"
+    //% weight=95
+    export function stoppen(): void {
+        pins.analogWritePin(AnalogPin.P1, 0)
+        pins.analogWritePin(AnalogPin.P3, 0)
+        motorenAktiv = false
+    }
+
+    /**
+     * Bluetooth starten und LOFI-Befehle empfangen.
      */
     //% blockId=mini_tank_lofi_bluetooth
     //% block="LOFI Bluetooth starten"
     //% weight=90
     export function bluetoothStarten(): void {
+
+        if (lofiGestartet) {
+            return
+        }
+
+        lofiGestartet = true
+        stoppen()
+
         bluetooth.startUartService()
+
+        bluetooth.onBluetoothDisconnected(function () {
+            stoppen()
+        })
+
+        control.inBackground(function () {
+            while (true) {
+
+                let befehl = bluetooth.uartReadUntil("\n")
+                befehl = befehl.trim()
+
+                let taste = -1
+
+                if (befehl == "up") {
+                    taste = LofiTaste.Hoch
+                } else if (befehl == "down") {
+                    taste = LofiTaste.Runter
+                } else if (befehl == "left") {
+                    taste = LofiTaste.Links
+                } else if (befehl == "right") {
+                    taste = LofiTaste.Rechts
+                }
+
+                if (taste >= 0) {
+                    letzteNachricht = input.runningTime()
+
+                    for (let i = 0; i < ereignisse.length; i++) {
+                        if (ereignisse[i] == taste) {
+                            funktionen[i]()
+                        }
+                    }
+                }
+
+                basic.pause(10)
+            }
+        })
+
+        // Sicherheitsstopp nach 500 ms
+        control.inBackground(function () {
+            while (true) {
+                if (motorenAktiv) {
+                    if (input.runningTime() - letzteNachricht >= 500) {
+                        stoppen()
+                    }
+                }
+                basic.pause(20)
+            }
+        })
+    }
+
+    /**
+     * Auf eine LOFI-Pfeiltaste reagieren.
+     */
+    //% blockId=mini_tank_lofi_taste
+    //% block="wenn LOFI-Taste %taste empfangen"
+    //% weight=80
+    export function wennTaste(
+        taste: LofiTaste,
+        handler: () => void
+    ): void {
+        ereignisse.push(taste)
+        funktionen.push(handler)
     }
 }
