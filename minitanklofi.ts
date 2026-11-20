@@ -158,11 +158,11 @@ namespace miniTankLofi {
             }
         })
 
-        // Sicherheitsstopp nach 500 ms
+        // Sicherheitsstopp nach 300 ms
         control.inBackground(function () {
             while (true) {
                 if (motorenAktiv) {
-                    if (input.runningTime() - letzteNachricht >= 500) {
+                    if (input.runningTime() - letzteNachricht >= 300) {
                         stoppen()
                     }
                 }
