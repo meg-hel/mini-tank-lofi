@@ -45,8 +45,13 @@ namespace miniTankLofi {
     let lofiGestartet = false
     let letzteNachricht = 0
     let motorenAktiv = false
+    let aktuelleTaste = -1
     let ereignisse: number[] = []
     let funktionen: (() => void)[] = []
+
+    // Fahrzeiten in Millisekunden
+    let fahrzeit = 250
+    let drehzeit = 150
 
     /**
      * Einen oder beide Motoren steuern.
@@ -145,6 +150,7 @@ namespace miniTankLofi {
                 }
 
                 if (taste >= 0) {
+                    aktuelleTaste = taste
                     letzteNachricht = input.runningTime()
 
                     for (let i = 0; i < ereignisse.length; i++) {
@@ -158,14 +164,25 @@ namespace miniTankLofi {
             }
         })
 
-        // Sicherheitsstopp nach 300 ms
+        // Automatischer Sicherheitsstopp
         control.inBackground(function () {
             while (true) {
                 if (motorenAktiv) {
-                    if (input.runningTime() - letzteNachricht >= 300) {
+
+                    let zeit = fahrzeit
+
+                    if (
+                        aktuelleTaste == LofiTaste.Links ||
+                        aktuelleTaste == LofiTaste.Rechts
+                    ) {
+                        zeit = drehzeit
+                    }
+
+                    if (input.runningTime() - letzteNachricht >= zeit) {
                         stoppen()
                     }
                 }
+
                 basic.pause(20)
             }
         })
