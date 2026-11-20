@@ -46,12 +46,23 @@ namespace miniTankLofi {
     let letzteNachricht = 0
     let motorenAktiv = false
     let aktuelleTaste = -1
+
     let ereignisse: number[] = []
     let funktionen: (() => void)[] = []
 
     // Fahrzeiten in Millisekunden
     let fahrzeit = 150
     let drehzeit = 75
+
+    /**
+     * Interne Stoppfunktion.
+     * Kein sichtbarer MakeCode-Block.
+     */
+    function stoppen(): void {
+        pins.analogWritePin(AnalogPin.P1, 0)
+        pins.analogWritePin(AnalogPin.P3, 0)
+        motorenAktiv = false
+    }
 
     /**
      * Einen oder beide Motoren steuern.
@@ -96,16 +107,6 @@ namespace miniTankLofi {
         } else if (motor == Motor.Beide) {
             motorenAktiv = false
         }
-    }
-
-    /**
-     * Beide Motoren ausschalten.
-     * Kein sichtbarer Schülerblock.
-     */
-    function stoppen(): void {
-        pins.analogWritePin(AnalogPin.P1, 0)
-        pins.analogWritePin(AnalogPin.P3, 0)
-        motorenAktiv = false
     }
 
     /**
@@ -165,6 +166,7 @@ namespace miniTankLofi {
         // Automatischer Sicherheitsstopp
         control.inBackground(function () {
             while (true) {
+
                 if (motorenAktiv) {
 
                     let zeit = fahrzeit
@@ -176,7 +178,9 @@ namespace miniTankLofi {
                         zeit = drehzeit
                     }
 
-                    if (input.runningTime() - letzteNachricht >= zeit) {
+                    if (
+                        input.runningTime() - letzteNachricht >= zeit
+                    ) {
                         stoppen()
                     }
                 }
@@ -196,6 +200,7 @@ namespace miniTankLofi {
         taste: LofiTaste,
         handler: () => void
     ): void {
+
         ereignisse.push(taste)
         funktionen.push(handler)
     }
