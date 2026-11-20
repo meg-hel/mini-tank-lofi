@@ -1,0 +1,16 @@
+
+{
+    "name": "mini-tank-lofi",
+    "description": "Mini Tank mit LOFI Bluetooth fuer Calliope mini V2",
+    "dependencies": {
+        "core": "*",
+        "v2": "*",
+        "bluetooth": "*"
+    },
+    "files": [
+        "minitanklofi.ts"
+    ],
+    "supportedTargets": [
+        "calliopemini"
+    ]
+}
