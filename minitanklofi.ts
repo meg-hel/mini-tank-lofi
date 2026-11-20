@@ -100,10 +100,8 @@ namespace miniTankLofi {
 
     /**
      * Beide Motoren ausschalten.
+     * Kein sichtbarer Schülerblock.
      */
-    //% blockId=mini_tank_lofi_stopp
-    //% block="Motoren stoppen"
-    //% weight=95
     export function stoppen(): void {
         pins.analogWritePin(AnalogPin.P1, 0)
         pins.analogWritePin(AnalogPin.P3, 0)
