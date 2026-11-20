@@ -50,8 +50,8 @@ namespace miniTankLofi {
     let funktionen: (() => void)[] = []
 
     // Fahrzeiten in Millisekunden
-    let fahrzeit = 250
-    let drehzeit = 150
+    let fahrzeit = 150
+    let drehzeit = 75
 
     /**
      * Einen oder beide Motoren steuern.
